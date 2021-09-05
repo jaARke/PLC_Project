@@ -2,3 +2,7 @@ plc/examples/Account.java
  plc.examples.Account
 plc/examples/RegularExpressionsMenu.java
  plc.examples.RegularExpressionsMenu
+plc/examples/TestRE.java
+ plc.examples.TestRE
+plc/homework/Regex.java
+ plc.homework.Regex
