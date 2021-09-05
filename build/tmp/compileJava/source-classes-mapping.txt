@@ -1,2 +1,4 @@
 plc/examples/Account.java
  plc.examples.Account
+plc/examples/TestRE.java
+ plc.examples.TestRE
