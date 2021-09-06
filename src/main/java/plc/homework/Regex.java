@@ -13,5 +13,5 @@ public class Regex {
             ODD_STRINGS = Pattern.compile("^.(?:..){5,9}$"),
             CHARACTER_LIST = Pattern.compile("\\[(\\'.\\')?(, ?\\'.\\')*\\]"),
             DECIMAL = Pattern.compile("[0-9]+\\.[0-9]+"),
-            STRING = Pattern.compile("^\\\"(\\\\(?=[bnrt'\"\\\\])|[^\\\\\\s])*\\\"$");
+            STRING = Pattern.compile("^\\\"(\\\\(?=[bnrt'\"\\\\])|[^\\\\])*\\\"$");
 }
