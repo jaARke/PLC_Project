@@ -120,6 +120,7 @@ public class RegexTests {
                 Arguments.of("Long Both", "19473626483.47291284628", true),
                 Arguments.of("Less Than One", "0.125", true),
                 Arguments.of("Leading 0s", "002.125", true),
+                Arguments.of("Negative", "-4.5", true),
 
                 Arguments.of("Multiple Decimals", "19.24.56", false),
                 Arguments.of("Non-digit Characters", "2637erf.48hd", false),
