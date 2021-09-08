@@ -146,6 +146,7 @@ public class RegexTests {
             Arguments.of("Multiple Quotes", "\"Hel\"lo\"", true),
             Arguments.of("Lots of Escapes", "\"\\n\\b\\t\\r\"", true),
             Arguments.of("Spaces", "\"Hello, this is a test string\"", true),
+            Arguments.of("Escape, then words", "\"\\bHello there\"", true),
             Arguments.of("Surrounding Spaces", "\"   Hello   \"", true),
 
             Arguments.of("Missing Quote Begin", "Hello\"", false),
