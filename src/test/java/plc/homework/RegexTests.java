@@ -98,6 +98,7 @@ public class RegexTests {
                 Arguments.of("Numbers", "['1','2','3']", true),
                 Arguments.of("Symbols", "['!','@','#']", true),
                 Arguments.of("Mixed Format", "['1','@','a']", true),
+                Arguments.of("Escape Sequences", "['\\b','\\n','\\t'", true),
 
                 Arguments.of("Missing Brackets", "'a','b','c'", false),
                 Arguments.of("Missing Commas", "['a' 'b' 'c']", false),
