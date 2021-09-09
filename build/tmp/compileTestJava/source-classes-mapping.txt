@@ -1,3 +1,5 @@
+plc/project/LexerTests.java
+ plc.project.LexerTests
 plc/examples/AccountTests.java
  plc.examples.AccountTests
 plc/homework/RegexTests.java
