@@ -76,11 +76,13 @@ public class RegexTests {
                 Arguments.of("13 Symbols", "%%^^$$##@@!!@", true),
                 Arguments.of("13 Numbers", "1234567891234", true),
                 Arguments.of("19 Characters", "qqwweerrttyyuuiioop", true),
+                Arguments.of("Escape Characters", "\\b\\b\\b\\badeas\\n\\t", true),
 
                 Arguments.of("5 Characters", "5five", false),
                 Arguments.of("10 Characters", "qqwweerrtt", false),
                 Arguments.of("14 Characters", "i<3pancakes14!", false),
                 Arguments.of("20 Characters", "qqwweerrttyyuuiioopp", false),
+                Arguments.of("Invalid Escape Characters", "\\d\\d\\d\\d\\a\\b\\b", false),
                 Arguments.of("Empty String", "", false)
         );
     }
