@@ -3,6 +3,8 @@ package plc.project;
 import java.util.ArrayList;
 import java.util.List;
 
+import static plc.project.Token.Type.*;
+
 /**
  * The lexer works through three main functions:
  *
@@ -28,10 +30,17 @@ public final class Lexer {
      * whitespace where appropriate.
      */
     public List<Token> lex() {
-        while (chars.has(1)) {  // While there are characters in the data CharStream
-
+        List<Token> tokenList = new ArrayList<Token>();
+        while (chars.has(0)) {  // While there are characters in the CharStream:
+            if (peek("[\\s]")) {  // Ignore whitespace
+                chars.advance();
+                chars.skip();
+                continue;
+            }
+            Token newToken = lexToken();
+            tokenList.add(newToken);
         }
-        return null;
+        return tokenList;
     }
 
     /**
@@ -43,31 +52,112 @@ public final class Lexer {
      * by {@link #lex()}
      */
     public Token lexToken() {
-        throw new UnsupportedOperationException(); //TODO
+        Token newToken;
+        if (peek("[A-Za-z@]")) {
+            newToken = lexIdentifier();
+        }
+        else if (peek("(-|[0-9])")) {
+            newToken = lexNumber();
+        }
+        else if (peek("\\'")) {
+            newToken = lexCharacter();
+        }
+        else if (peek("\\\"")) {
+            newToken = lexString();
+        }
+        else {
+            newToken = lexOperator();
+        }
+        return newToken;
     }
 
     public Token lexIdentifier() {
-        throw new UnsupportedOperationException(); //TODO
+        while (peek("[^\\s]")) {  // While the next character is not a whitespace:
+            if (!match("[A-Za-z0-9_-]")) {  // Keep matching to characters of the identifier until an unsupported character is reached
+                return chars.emit(IDENTIFIER);
+            }
+        }
+        return chars.emit(IDENTIFIER);  // Emit the identifier if the input ends while lexing
     }
 
     public Token lexNumber() {
-        throw new UnsupportedOperationException(); //TODO
+        if (match("0")) {
+            return chars.emit(INTEGER);
+        }
+        if (match("-")) {
+            if (!peek("[1-9]")) {   // The hyphen is being used as an operator
+                return lexOperator();
+            }
+        }
+        while (match("[0-9]")); // Empty body because the match function advances the CharStream
+        if (match("\\.")) {
+            if (!peek("[0-9]")) {   // There are no numbers following the decimal point
+                return chars.emit(INTEGER);
+            }
+            while (match("[0-9]"));
+            return chars.emit(DECIMAL);
+        }
+        else {
+            return chars.emit(INTEGER);
+        }
     }
 
     public Token lexCharacter() {
-        throw new UnsupportedOperationException(); //TODO
+        chars.advance();    // Advance past the starting apostrophe
+        if (match("\\\\")) {
+            if (!match("[bnrt'\"]")) {  // If a valid escape character is not used:
+                throw new ParseException("Invalid use of character literal", chars.index);
+            }
+        }
+        else {
+            chars.advance();
+        }
+        if (!match("\\'")) {
+            throw new ParseException("Invalid use of character literal", chars.index);
+        }
+        return chars.emit(CHARACTER);
     }
 
     public Token lexString() {
+        chars.advance();    // Advance past the starting quote
+        while (!match("\\\"")) {    // While the ending quote has not been reached
+            if (chars.index >= chars.input.length()) {
+                throw new ParseException("Reached EOF in string literal", chars.index);
+            }
+            if (peek("\\n")) {
+                throw new ParseException("String literal cannot span multiple lines", chars.index);
+            }
+            if (match("\\\\")) {
+                if (!match("[bnrt'\\\"]")) {
+                    throw new ParseException("Invalid escape sequence in string literal", chars.index);
+                }
+            }
+            chars.advance();
+        }
+        return chars.emit(STRING);
+    }
+
+    public void lexEscape() {   // What to use this for?
         throw new UnsupportedOperationException(); //TODO
     }
 
-    public void lexEscape() {
-        throw new UnsupportedOperationException(); //TODO
-    }
-
-    public Token lexOperator() {
-        throw new UnsupportedOperationException(); //TODO
+    public Token lexOperator() {    // Checks to see if the next character(s) represent a valid operator. If so, emit. If not, throw parse exception
+        if (match("!")) {
+            match("=");
+        }
+        else if (match("=")) {
+            match("=");
+        }
+        else if (match("&")) {
+            match("&");
+        }
+        else if (match("|")) {
+            match("|");
+        }
+        else {
+            chars.advance();
+        }
+        return chars.emit(OPERATOR);
     }
 
     /**
