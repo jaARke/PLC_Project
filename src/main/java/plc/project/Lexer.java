@@ -71,6 +71,7 @@ public final class Lexer {
     }
 
     public Token lexIdentifier() {
+        chars.advance();    // Advance past the first character
         while (peek("[^\\s]")) {  // While the next character is not a whitespace:
             if (!match("[A-Za-z0-9_-]")) {  // Keep matching to characters of the identifier until an unsupported character is reached
                 return chars.emit(IDENTIFIER);
@@ -80,15 +81,17 @@ public final class Lexer {
     }
 
     public Token lexNumber() {
+        boolean zero = false;   // Used to track whether or not the number starts with a zero
         if (match("0")) {
-            return chars.emit(INTEGER);
+            zero = true;
         }
         if (match("-")) {
-            if (!peek("[1-9]")) {   // The hyphen is being used as an operator
+            if (!peek("[0-9]")) {   // The hyphen is being used as an operator
                 return lexOperator();
             }
+            return lexNumber(); // Call the function to lex the actual number part (after the hyphen has been consumed)
         }
-        while (match("[0-9]")); // Empty body because the match function advances the CharStream
+        while (match("[0-9]") && !zero); // Empty body because the match function advances the CharStream
         if (peek("\\.")) {
             if (!chars.has(1) || !String.valueOf(chars.get(1)).matches("[0-9]")) {   // There are no numbers following the decimal point
                 return chars.emit(INTEGER);
@@ -128,7 +131,9 @@ public final class Lexer {
             if (match("\\\\")) {
                 lexEscape();
             }
-            chars.advance();
+            else {
+                chars.advance();
+            }
         }
         return chars.emit(STRING);
     }
