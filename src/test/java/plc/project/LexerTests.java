@@ -190,10 +190,10 @@ public class LexerTests {
                         new Token(Token.Type.STRING, "\"\\t\"", 17),
                         new Token(Token.Type.OPERATOR, ";", 21)
                 )),
-                Arguments.of("Example 10", "float myArray2 [] = {1.0, -0.25};", Arrays.asList( //TODO
+                Arguments.of("Example 10", "float myArray2 [] = {1.0, -0.25};", Arrays.asList(
                         new Token(Token.Type.IDENTIFIER, "float", 0),
                         new Token(Token.Type.IDENTIFIER, "myArray2", 6),
-                        new Token(Token.Type.OPERATOR, "[", 15), //?
+                        new Token(Token.Type.OPERATOR, "[", 15),
                         new Token(Token.Type.OPERATOR, "]", 16),
                         new Token(Token.Type.OPERATOR, "=", 18),
                         new Token(Token.Type.OPERATOR, "{", 20),
