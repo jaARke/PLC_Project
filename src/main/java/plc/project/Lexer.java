@@ -32,8 +32,7 @@ public final class Lexer {
     public List<Token> lex() {
         List<Token> tokenList = new ArrayList<Token>();
         while (chars.has(0)) {  // While there are characters in the CharStream:
-            if (peek("[\\s]")) {  // Ignore whitespace
-                chars.advance();
+            if (match("[\\s]")) {  // Ignore whitespace
                 chars.skip();
                 continue;
             }
@@ -90,11 +89,12 @@ public final class Lexer {
             }
         }
         while (match("[0-9]")); // Empty body because the match function advances the CharStream
-        if (match("\\.")) {
-            if (!peek("[0-9]")) {   // There are no numbers following the decimal point
+        if (peek("\\.")) {
+            if (!chars.has(1) || !String.valueOf(chars.get(1)).matches("[0-9]")) {   // There are no numbers following the decimal point
                 return chars.emit(INTEGER);
             }
-            while (match("[0-9]"));
+            chars.advance();
+            while (match("[0-9]")); // See above about empty body
             return chars.emit(DECIMAL);
         }
         else {
