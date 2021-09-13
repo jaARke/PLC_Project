@@ -105,9 +105,7 @@ public final class Lexer {
     public Token lexCharacter() {
         chars.advance();    // Advance past the starting apostrophe
         if (match("\\\\")) {
-            if (!match("[bnrt'\"]")) {  // If a valid escape character is not used:
-                throw new ParseException("Invalid use of character literal", chars.index);
-            }
+            lexEscape();
         }
         else {
             chars.advance();
@@ -128,17 +126,17 @@ public final class Lexer {
                 throw new ParseException("String literal cannot span multiple lines", chars.index);
             }
             if (match("\\\\")) {
-                if (!match("[bnrt'\\\"]")) {
-                    throw new ParseException("Invalid escape sequence in string literal", chars.index);
-                }
+                lexEscape();
             }
             chars.advance();
         }
         return chars.emit(STRING);
     }
 
-    public void lexEscape() {   // What to use this for?
-        throw new UnsupportedOperationException(); //TODO
+    public void lexEscape() {   // Matches to a valid escape sequence, error if invalid
+        if (!match("[bnrt'\\\"]")) {
+            throw new ParseException("Invalid escape sequence", chars.index);
+        }
     }
 
     public Token lexOperator() {    // Checks to see if the next character(s) represent a valid operator. If so, emit. If not, throw parse exception
