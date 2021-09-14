@@ -202,6 +202,11 @@ public class LexerTests {
                         new Token(Token.Type.DECIMAL, "-0.25", 26),
                         new Token(Token.Type.OPERATOR, "}", 31),
                         new Token(Token.Type.OPERATOR, ";", 32)
+                )),
+                Arguments.of("Example 9", "one\btwo", Arrays.asList( //SHOULD FAIL
+                        new Token(Token.Type.IDENTIFIER, "one", 0),
+                        new Token(Token.Type.OPERATOR, "\b", 3),
+                        new Token(Token.Type.IDENTIFIER, "two", 4)
                 ))
         );
     }

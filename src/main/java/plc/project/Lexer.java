@@ -32,7 +32,7 @@ public final class Lexer {
     public List<Token> lex() {
         List<Token> tokenList = new ArrayList<Token>();
         while (chars.has(0)) {  // While there are characters in the CharStream:
-            if (match("[\\s]")) {  // Ignore whitespace
+            if (match("[\\s]") || match("[\b\n\t\r]")) {  // Ignore whitespace
                 chars.skip();
                 continue;
             }
