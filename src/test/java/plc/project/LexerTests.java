@@ -203,7 +203,15 @@ public class LexerTests {
                         new Token(Token.Type.OPERATOR, "}", 31),
                         new Token(Token.Type.OPERATOR, ";", 32)
                 )),
-                Arguments.of("Example 9", "one\btwo", Arrays.asList( //SHOULD FAIL
+                Arguments.of("Example 11", "01", Arrays.asList(
+                        new Token(Token.Type.INTEGER, "0", 0),
+                        new Token(Token.Type.INTEGER, "1", 1)
+                )),
+                Arguments.of("Example 12", "0.", Arrays.asList(
+                        new Token(Token.Type.INTEGER, "0", 0),
+                        new Token(Token.Type.OPERATOR, ".", 1)
+                )),
+                Arguments.of("Example 13", "one\btwo", Arrays.asList( //SHOULD FAIL
                         new Token(Token.Type.IDENTIFIER, "one", 0),
                         new Token(Token.Type.OPERATOR, "\b", 3),
                         new Token(Token.Type.IDENTIFIER, "two", 4)

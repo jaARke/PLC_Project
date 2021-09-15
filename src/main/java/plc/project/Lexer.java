@@ -85,13 +85,13 @@ public final class Lexer {
         if (match("0")) {
             zero = true;
         }
-        if (match("-")) {
+        else if (match("-")) {
             if (!peek("[0-9]")) {   // The hyphen is being used as an operator
                 return lexOperator();
             }
             return lexNumber(); // Call the function to lex the actual number part (after the hyphen has been consumed)
         }
-        while (match("[0-9]") && !zero); // Empty body because the match function advances the CharStream
+        while (!zero && match("[0-9]")); // Empty body because the match function advances the CharStream
         if (peek("\\.")) {
             if (!chars.has(1) || !String.valueOf(chars.get(1)).matches("[0-9]")) {   // There are no numbers following the decimal point
                 return chars.emit(INTEGER);
