@@ -52,6 +52,7 @@ public class LexerTests {
         return Stream.of(
                 Arguments.of("Multiple Digits", "123.456", true),
                 Arguments.of("Negative Decimal", "-1.0", true),
+                Arguments.of("Less than 0", "0.456", true),
                 Arguments.of("Trailing Decimal", "1.", false),
                 Arguments.of("Leading Decimal", ".5", false)
         );
@@ -125,6 +126,159 @@ public class LexerTests {
                         new Token(Token.Type.STRING, "\"Hello, World!\"", 6),
                         new Token(Token.Type.OPERATOR, ")", 21),
                         new Token(Token.Type.OPERATOR, ";", 22)
+                )),
+                Arguments.of("Example 3", "1. print(\"Hello, World!\");", Arrays.asList(
+                        new Token(Token.Type.INTEGER, "1", 0),
+                        new Token(Token.Type.OPERATOR, ".", 1),
+                        new Token(Token.Type.IDENTIFIER, "print", 3),
+                        new Token(Token.Type.OPERATOR, "(", 8),
+                        new Token(Token.Type.STRING, "\"Hello, World!\"", 9),
+                        new Token(Token.Type.OPERATOR, ")", 24),
+                        new Token(Token.Type.OPERATOR, ";", 25)
+                )),
+                Arguments.of("Example 4", "System.out.print(\"Test\");", Arrays.asList(
+                        new Token(Token.Type.IDENTIFIER, "System", 0),
+                        new Token(Token.Type.OPERATOR, ".", 6),
+                        new Token(Token.Type.IDENTIFIER, "out", 7),
+                        new Token(Token.Type.OPERATOR, ".", 10),
+                        new Token(Token.Type.IDENTIFIER, "print", 11),
+                        new Token(Token.Type.OPERATOR, "(", 16),
+                        new Token(Token.Type.STRING, "\"Test\"", 17),
+                        new Token(Token.Type.OPERATOR, ")", 23),
+                        new Token(Token.Type.OPERATOR, ";", 24)
+                )),
+                Arguments.of("Example 5", "return this.price;", Arrays.asList(
+                        new Token(Token.Type.IDENTIFIER, "return", 0),
+                        new Token(Token.Type.IDENTIFIER, "this", 7),
+                        new Token(Token.Type.OPERATOR, ".", 11),
+                        new Token(Token.Type.IDENTIFIER, "price", 12),
+                        new Token(Token.Type.OPERATOR, ";", 17)
+                )),
+                Arguments.of("Example 6", "@Override public int number() { return this.number; }", Arrays.asList(
+                        new Token(Token.Type.IDENTIFIER, "@Override", 0),
+                        new Token(Token.Type.IDENTIFIER, "public", 10),
+                        new Token(Token.Type.IDENTIFIER, "int", 17),
+                        new Token(Token.Type.IDENTIFIER, "number", 21),
+                        new Token(Token.Type.OPERATOR, "(", 27),
+                        new Token(Token.Type.OPERATOR, ")", 28),
+                        new Token(Token.Type.OPERATOR, "{", 30),
+                        new Token(Token.Type.IDENTIFIER, "return", 32),
+                        new Token(Token.Type.IDENTIFIER, "this", 39),
+                        new Token(Token.Type.OPERATOR, ".", 43),
+                        new Token(Token.Type.IDENTIFIER, "number", 44),
+                        new Token(Token.Type.OPERATOR, ";", 50),
+                        new Token(Token.Type.OPERATOR, "}", 52)
+                )),
+                Arguments.of("Example 7", "int negNum = -1;", Arrays.asList(
+                        new Token(Token.Type.IDENTIFIER, "int", 0),
+                        new Token(Token.Type.IDENTIFIER, "negNum", 4),
+                        new Token(Token.Type.OPERATOR, "=", 11),
+                        new Token(Token.Type.INTEGER, "-1", 13),
+                        new Token(Token.Type.OPERATOR, ";", 15)
+                )),
+                Arguments.of("Example 8", "char letter = \'a\';", Arrays.asList(
+                        new Token(Token.Type.IDENTIFIER, "char", 0),
+                        new Token(Token.Type.IDENTIFIER, "letter", 5),
+                        new Token(Token.Type.OPERATOR, "=", 12),
+                        new Token(Token.Type.CHARACTER, "\'a\'", 14),
+                        new Token(Token.Type.OPERATOR, ";", 17)
+                )),
+                Arguments.of("Example 9", "var escapeChar = \"\\t\";", Arrays.asList(
+                        new Token(Token.Type.IDENTIFIER, "var", 0),
+                        new Token(Token.Type.IDENTIFIER, "escapeChar", 4),
+                        new Token(Token.Type.OPERATOR, "=", 15),
+                        new Token(Token.Type.STRING, "\"\\t\"", 17),
+                        new Token(Token.Type.OPERATOR, ";", 21)
+                )),
+                Arguments.of("Example 10", "float myArray2 [] = {1.0, -0.25};", Arrays.asList(
+                        new Token(Token.Type.IDENTIFIER, "float", 0),
+                        new Token(Token.Type.IDENTIFIER, "myArray2", 6),
+                        new Token(Token.Type.OPERATOR, "[", 15),
+                        new Token(Token.Type.OPERATOR, "]", 16),
+                        new Token(Token.Type.OPERATOR, "=", 18),
+                        new Token(Token.Type.OPERATOR, "{", 20),
+                        new Token(Token.Type.DECIMAL, "1.0", 21),
+                        new Token(Token.Type.OPERATOR, ",", 24),
+                        new Token(Token.Type.DECIMAL, "-0.25", 26),
+                        new Token(Token.Type.OPERATOR, "}", 31),
+                        new Token(Token.Type.OPERATOR, ";", 32)
+                )),
+                Arguments.of("Example 11", "01", Arrays.asList(
+                        new Token(Token.Type.INTEGER, "0", 0),
+                        new Token(Token.Type.INTEGER, "1", 1)
+                )),
+                Arguments.of("Example 12", "0.", Arrays.asList(
+                        new Token(Token.Type.INTEGER, "0", 0),
+                        new Token(Token.Type.OPERATOR, ".", 1)
+                )),
+                Arguments.of("Example 13", "VAR i = -1 : Integer;\nVAL inc = 2 : Integer;\nFUN foo() DO\n    WHILE i != 1 DO\n        IF i > 0 DO\n            print(\"bar\");\n        END\n        i = i + inc;\n    END\nEND", Arrays.asList(
+                        //VAR i = -1 : Integer;
+                        new Token(Token.Type.IDENTIFIER, "VAR", 0),
+                        new Token(Token.Type.IDENTIFIER, "i", 4),
+                        new Token(Token.Type.OPERATOR, "=", 6),
+                        new Token(Token.Type.INTEGER, "-1", 8),
+                        new Token(Token.Type.OPERATOR, ":", 11),
+                        new Token(Token.Type.IDENTIFIER, "Integer", 13),
+                        new Token(Token.Type.OPERATOR, ";", 20),
+
+                        //VAL inc = 2 : Integer;
+                        new Token(Token.Type.IDENTIFIER, "VAL", 22),
+                        new Token(Token.Type.IDENTIFIER, "inc", 26),
+                        new Token(Token.Type.OPERATOR, "=", 30),
+                        new Token(Token.Type.INTEGER, "2", 32),
+                        new Token(Token.Type.OPERATOR, ":", 34),
+                        new Token(Token.Type.IDENTIFIER, "Integer", 36),
+                        new Token(Token.Type.OPERATOR, ";", 43),
+
+                        //DEF foo() DO
+                        new Token(Token.Type.IDENTIFIER, "FUN", 45),
+                        new Token(Token.Type.IDENTIFIER, "foo", 49),
+                        new Token(Token.Type.OPERATOR, "(", 52),
+                        new Token(Token.Type.OPERATOR, ")", 53),
+                        new Token(Token.Type.IDENTIFIER, "DO", 55),
+
+                        //    WHILE i != 1 DO
+                        new Token(Token.Type.IDENTIFIER, "WHILE", 62),
+                        new Token(Token.Type.IDENTIFIER, "i", 68),
+                        new Token(Token.Type.OPERATOR, "!=", 70),
+                        new Token(Token.Type.INTEGER, "1", 73),
+                        new Token(Token.Type.IDENTIFIER, "DO", 75),
+
+                        //        IF i > 0 DO
+                        new Token(Token.Type.IDENTIFIER, "IF", 86),
+                        new Token(Token.Type.IDENTIFIER, "i", 89),
+                        new Token(Token.Type.OPERATOR, ">", 91),
+                        new Token(Token.Type.INTEGER, "0", 93),
+                        new Token(Token.Type.IDENTIFIER, "DO", 95),
+
+                        //            print(\"bar\");
+                        new Token(Token.Type.IDENTIFIER, "print", 110),
+                        new Token(Token.Type.OPERATOR, "(", 115),
+                        new Token(Token.Type.STRING, "\"bar\"", 116),
+                        new Token(Token.Type.OPERATOR, ")", 121),
+                        new Token(Token.Type.OPERATOR, ";", 122),
+
+                        //        END
+                        new Token(Token.Type.IDENTIFIER, "END", 132),
+
+                        //        i = i + inc;
+                        new Token(Token.Type.IDENTIFIER, "i",144),
+                        new Token(Token.Type.OPERATOR, "=", 146),
+                        new Token(Token.Type.IDENTIFIER, "i", 148),
+                        new Token(Token.Type.OPERATOR, "+", 150),
+                        new Token(Token.Type.IDENTIFIER, "inc", 152),
+                        new Token(Token.Type.OPERATOR, ";", 155),
+
+                        //    END
+                        new Token(Token.Type.IDENTIFIER, "END", 161),
+
+                        //END
+                        new Token(Token.Type.IDENTIFIER, "END", 165)
+                )),
+                Arguments.of("Example 13", "one\btwo", Arrays.asList( //SHOULD FAIL
+                        new Token(Token.Type.IDENTIFIER, "one", 0),
+                        new Token(Token.Type.OPERATOR, "\b", 3),
+                        new Token(Token.Type.IDENTIFIER, "two", 4)
                 ))
         );
     }
