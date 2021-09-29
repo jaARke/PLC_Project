@@ -273,7 +273,6 @@ public final class Parser {
             // Replace all literal escape sequences with their actual value:
             string = replaceEscapes(string);
             return new Ast.Expression.Literal(string);
-
         }
         else if (match("(")) {
             Ast.Expression expression = parseExpression();
