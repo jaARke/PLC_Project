@@ -6,6 +6,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import javax.swing.text.html.Option;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -61,8 +62,19 @@ final class ParserExpressionTests {
                                 new Ast.Expression.Access(Optional.empty(), "name"),
                                 new Ast.Expression.Access(Optional.empty(), "value")
                         )
+                ),
+                Arguments.of("Missing Right Side",  // SHOULD FAIL
+                        Arrays.asList(
+                                new Token(Token.Type.IDENTIFIER, "name", 0),
+                                new Token(Token.Type.OPERATOR, "=", 5),
+                                new Token(Token.Type.OPERATOR, ";", 7)
+                        ),
+                        new Ast.Statement.Assignment (
+                                new Ast.Expression.Access(Optional.empty(), "name"),
+                                new Ast.Expression.Access(Optional.empty(), "value")
+                        )
                 )
-        );
+            );
     }
 
     @ParameterizedTest
@@ -130,6 +142,23 @@ final class ParserExpressionTests {
                                 new Ast.Expression.Access(Optional.empty(), "expr1"),
                                 new Ast.Expression.Access(Optional.empty(), "expr2")
                         ))
+                ),
+                Arguments.of("Grouped Variable - no closing parenthesis",   // SHOULD FAIL
+                        Arrays.asList(
+                                //(expr)
+                                new Token(Token.Type.OPERATOR, "(", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr", 1)
+                        ),
+                        new Ast.Expression.Group(new Ast.Expression.Access(Optional.empty(), "expr"))
+                ),
+                Arguments.of("Invalid Closing",     // SHOULD FAIL
+                        Arrays.asList(
+                                //(expr)
+                                new Token(Token.Type.OPERATOR, "(", 0),
+                                new Token(Token.Type.IDENTIFIER, "expr", 1),
+                                new Token(Token.Type.OPERATOR, "]", 5)
+                        ),
+                        new Ast.Expression.Group(new Ast.Expression.Access(Optional.empty(), "expr"))
                 )
         );
     }
@@ -190,7 +219,7 @@ final class ParserExpressionTests {
                                 new Ast.Expression.Access(Optional.empty(), "expr2")
                         )
                 ),
-                Arguments.of("Multiple operators",
+                Arguments.of("Addition Multiplication",
                         Arrays.asList(
                                 new Token(Token.Type.IDENTIFIER, "expr1", 0),
                                 new Token(Token.Type.OPERATOR, "+", 6),
@@ -201,7 +230,34 @@ final class ParserExpressionTests {
                         new Ast.Expression.Binary("+",
                                 new Ast.Expression.Access(Optional.empty(), "expr1"),
                                 new Ast.Expression.Binary("*", new Ast.Expression.Access(Optional.empty(), "expr2"), new Ast.Expression.Access(Optional.empty(), "expr3"))
-                        ))
+                        )
+                ),
+                Arguments.of("And Or",
+                        Arrays.asList(
+                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                                new Token(Token.Type.OPERATOR, "&&", 6),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 9),
+                                new Token(Token.Type.OPERATOR, "||", 15),
+                                new Token(Token.Type.IDENTIFIER, "expr3", 18)
+                        ),
+                        new Ast.Expression.Binary("&&",
+                                new Ast.Expression.Access(Optional.empty(), "expr1"),
+                                new Ast.Expression.Binary("||", new Ast.Expression.Access(Optional.empty(), "expr2"), new Ast.Expression.Access(Optional.empty(), "expr3"))
+                        )
+                ),
+                Arguments.of("Equals Not Equals",
+                        Arrays.asList(
+                                new Token(Token.Type.IDENTIFIER, "expr1", 0),
+                                new Token(Token.Type.OPERATOR, "==", 6),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 9),
+                                new Token(Token.Type.OPERATOR, "!=", 15),
+                                new Token(Token.Type.IDENTIFIER, "expr3", 18)
+                        ),
+                        new Ast.Expression.Binary("==",
+                                new Ast.Expression.Access(Optional.empty(), "expr1"),
+                                new Ast.Expression.Binary("!=", new Ast.Expression.Access(Optional.empty(), "expr2"), new Ast.Expression.Access(Optional.empty(), "expr3"))
+                        )
+                )
         );
     }
 

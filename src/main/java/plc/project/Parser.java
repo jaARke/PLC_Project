@@ -187,7 +187,7 @@ public final class Parser {
         left = parseComparisonExpression();
         if (match("&&") || match("||")) {
             String operator = tokens.get(-1).getLiteral();
-            right = parseComparisonExpression();
+            right = parseLogicalExpression();
             return new Ast.Expression.Binary(operator, left, right);
         }
         return left;
@@ -202,7 +202,7 @@ public final class Parser {
         left = parseAdditiveExpression();
         if (match(">") || match("<") || match("==") || match("!=")) {
             String operator = tokens.get(-1).getLiteral();
-            right = parseAdditiveExpression();
+            right = parseComparisonExpression();
             return new Ast.Expression.Binary(operator, left, right);
         }
         return left;
@@ -217,7 +217,7 @@ public final class Parser {
         left = parseMultiplicativeExpression();
         if (match("+") || match("-")) {
             String operator = tokens.get(-1).getLiteral();
-            right = parseMultiplicativeExpression();
+            right = parseAdditiveExpression();
             return new Ast.Expression.Binary(operator, left, right);
         }
         return left;
@@ -232,7 +232,7 @@ public final class Parser {
         left = parsePrimaryExpression();
         if (match("*") || match("\\") || match("^")) {
             String operator = tokens.get(-1).getLiteral();
-            right = parsePrimaryExpression();
+            right = parseMultiplicativeExpression();
             return new Ast.Expression.Binary(operator, left, right);
         }
         return left;
@@ -295,7 +295,7 @@ public final class Parser {
                 while (!match(")")) {
                     parameterList.add(parseExpression());
                     if (match(",")) {
-                        if (peek(")")) {
+                        if (peek(")") || match(",")) {
                             throw new ParseException("Unexpected comma", tokens.index);
                         }
                     }
