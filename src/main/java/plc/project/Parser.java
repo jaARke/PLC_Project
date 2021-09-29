@@ -87,29 +87,29 @@ public final class Parser {
      * statement, then it is an expression/assignment statement.
      */
     public Ast.Statement parseStatement() throws ParseException {
-        Ast.Statement result = null;
+        if (false) {}   // Expand later
 
         // Functionality for parsing expression and assignment statements:
-        Ast.Expression expression = parseExpression();
-        if (expression instanceof Ast.Expression.Access && match("=")) {    // An assignment expression
-            if (!tokens.has(0) || match(";")) {
-                throw new ParseException("Expected an expression", tokens.index);
+        else {
+            Ast.Expression expression = parseExpression();
+            if (expression instanceof Ast.Expression.Access && match("=")) {    // An assignment expression
+                if (!tokens.has(0) || match(";")) {
+                    throw new ParseException("Expected an expression", tokens.index);
+                }
+                Ast.Expression rightSide = parseExpression();
+                if (!match(";")) {
+                    throw new ParseException("Expected a semicolon", tokens.index);
+                }
+                return new Ast.Statement.Assignment(expression, rightSide);
             }
-            Ast.Expression rightSide = parseExpression();
-            result = new Ast.Statement.Assignment(expression, rightSide);
+            else  {
+                if (!match(";")) {
+                    throw new ParseException("Expected a semicolon", tokens.index);
+                }
+                return new Ast.Statement.Expression(expression);
+            }
         }
-        else  {
-            result = new Ast.Statement.Expression(expression);
-        }
-
-        // Check to see that the statement has been parsed and that it is followed by a semicolon:
-        if (result == null) {
-            throw new ParseException("Invalid statement", tokens.index);
-        }
-        if (!match(";")) {
-            throw new ParseException("Expected a semicolon", tokens.index);
-        }
-        return result;
+        throw new ParseException("Invalid statement", tokens.index);    // If the statement doesn't match on one of the above cases
     }
 
     /**
