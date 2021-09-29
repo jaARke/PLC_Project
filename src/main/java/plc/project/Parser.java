@@ -87,34 +87,29 @@ public final class Parser {
      * statement, then it is an expression/assignment statement.
      */
     public Ast.Statement parseStatement() throws ParseException {
-        // Functionality for parsing expression, assignment, and declaration statements:
+        Ast.Statement result = null;
+
+        // Functionality for parsing expression and assignment statements:
         Ast.Expression expression = parseExpression();
-        if (expression instanceof Ast.Expression.Access) {
-            if (match("=")) {
-                Ast.Expression rightSide = parseExpression();
-                if (!match(";")) {
-                    throw new ParseException("Expected a semicolon", tokens.index);
-                }
-                if (rightSide instanceof Ast.Expression.Access) {
-                    return new Ast.Statement.Assignment(expression, rightSide);
-                }
-                else {
-                    return new Ast.Statement.Declaration(((Ast.Expression.Access) expression).getName(), Optional.of(rightSide));
-                }
+        if (expression instanceof Ast.Expression.Access && match("=")) {    // An assignment expression
+            if (!tokens.has(0) || match(";")) {
+                throw new ParseException("Expected an expression", tokens.index);
             }
-            else {
-                if (!match(";")) {
-                    throw new ParseException("Expected a semicolon", tokens.index);
-                }
-                return new Ast.Statement.Declaration(((Ast.Expression.Access) expression).getName(), Optional.empty());
-            }
+            Ast.Expression rightSide = parseExpression();
+            result = new Ast.Statement.Assignment(expression, rightSide);
         }
         else  {
-            if (!match(";")) {
-                throw new ParseException("Expected a semicolon", tokens.index);
-            }
-            return new Ast.Statement.Expression(expression);
+            result = new Ast.Statement.Expression(expression);
         }
+
+        // Check to see that the statement has been parsed and that it is followed by a semicolon:
+        if (result == null) {
+            throw new ParseException("Invalid statement", tokens.index);
+        }
+        if (!match(";")) {
+            throw new ParseException("Expected a semicolon", tokens.index);
+        }
+        return result;
     }
 
     /**
@@ -187,6 +182,9 @@ public final class Parser {
         left = parseComparisonExpression();
         if (match("&&") || match("||")) {
             String operator = tokens.get(-1).getLiteral();
+            if (!tokens.has(0)) {
+                throw new ParseException("Expected an expression", tokens.index);
+            }
             right = parseLogicalExpression();
             return new Ast.Expression.Binary(operator, left, right);
         }
@@ -202,6 +200,9 @@ public final class Parser {
         left = parseAdditiveExpression();
         if (match(">") || match("<") || match("==") || match("!=")) {
             String operator = tokens.get(-1).getLiteral();
+            if (!tokens.has(0)) {
+                throw new ParseException("Expected an expression", tokens.index);
+            }
             right = parseComparisonExpression();
             return new Ast.Expression.Binary(operator, left, right);
         }
@@ -217,6 +218,9 @@ public final class Parser {
         left = parseMultiplicativeExpression();
         if (match("+") || match("-")) {
             String operator = tokens.get(-1).getLiteral();
+            if (!tokens.has(0)) {
+                throw new ParseException("Expected an expression", tokens.index);
+            }
             right = parseAdditiveExpression();
             return new Ast.Expression.Binary(operator, left, right);
         }
@@ -232,6 +236,9 @@ public final class Parser {
         left = parsePrimaryExpression();
         if (match("*") || match("\\") || match("^")) {
             String operator = tokens.get(-1).getLiteral();
+            if (!tokens.has(0)) {
+                throw new ParseException("Expected an expression", tokens.index);
+            }
             right = parseMultiplicativeExpression();
             return new Ast.Expression.Binary(operator, left, right);
         }
@@ -275,6 +282,9 @@ public final class Parser {
             return new Ast.Expression.Literal(string);
         }
         else if (match("(")) {
+            if (!tokens.has(0) || match(")")) { // Empty or trailing parentheses
+                throw new ParseException("Expected an expression", tokens.index);
+            }
             Ast.Expression expression = parseExpression();
             if (!match(")")) {
                 throw new ParseException("Expected closing parenthesis", tokens.index);
@@ -284,6 +294,9 @@ public final class Parser {
         else if (match(Token.Type.IDENTIFIER)) {
             String name = tokens.get(-1).getLiteral();
             if (match("[")) {
+                if (!tokens.has(0) || match("]")) { // Empty or trailing brackets
+                    throw new ParseException("Expected an expression", tokens.index);
+                }
                 Ast.Expression expression = parseExpression();
                 if (!match("]")) {  // Closing bracket is missing
                     throw new ParseException("Expected closing bracket", tokens.index);
@@ -293,6 +306,9 @@ public final class Parser {
             else if (match("(")) {
                 Vector<Ast.Expression> parameterList = new Vector<>();  // Vector to collect the function arguments
                 while (!match(")")) {
+                    if (!tokens.has(0)) {
+                        throw new ParseException("Expected an expression", tokens.index);
+                    }
                     parameterList.add(parseExpression());
                     if (match(",")) {
                         if (peek(")") || match(",")) {
