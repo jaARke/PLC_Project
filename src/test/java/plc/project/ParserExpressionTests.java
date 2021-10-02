@@ -84,6 +84,17 @@ final class ParserExpressionTests {
                                 new Ast.Expression.Access(Optional.empty(), "name"),
                                 new Ast.Expression.Access(Optional.empty(), "value")
                         )
+                ),
+                Arguments.of("Missing Semicolon",  // SHOULD FAIL
+                        Arrays.asList(
+                                new Token(Token.Type.IDENTIFIER, "name", 0),
+                                new Token(Token.Type.OPERATOR, "=", 5),
+                                new Token(Token.Type.IDENTIFIER, "value", 7)
+                        ),
+                        new Ast.Statement.Assignment (
+                                new Ast.Expression.Access(Optional.empty(), "name"),
+                                new Ast.Expression.Access(Optional.empty(), "value")
+                        )
                 )
             );
     }
