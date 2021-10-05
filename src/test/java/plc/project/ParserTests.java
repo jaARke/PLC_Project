@@ -534,6 +534,28 @@ final class ParserTests {
         test(input, expected, Parser::parseSource);
     }
 
+    @Test
+    void testException() {
+        ParseException exception = Assertions.assertThrows(ParseException.class,
+                () -> new Parser(Arrays.asList(
+                        // FUN name() DO stmt; END␊VAR name = expr;
+                        new Token(Token.Type.IDENTIFIER, "FUN", 0),
+                        new Token(Token.Type.IDENTIFIER, "name", 4),
+                        new Token(Token.Type.OPERATOR, "(", 8),
+                        new Token(Token.Type.OPERATOR, ")", 9),
+                        new Token(Token.Type.IDENTIFIER, "DO", 11),
+                        new Token(Token.Type.IDENTIFIER, "stmt", 14),
+                        new Token(Token.Type.OPERATOR, ";", 18),
+                        new Token(Token.Type.IDENTIFIER, "END", 20),
+                        new Token(Token.Type.IDENTIFIER, "VAR", 24),
+                        new Token(Token.Type.IDENTIFIER, "name", 28),
+                        new Token(Token.Type.OPERATOR, "=", 33),
+                        new Token(Token.Type.IDENTIFIER, "expr", 35),
+                        new Token(Token.Type.OPERATOR, ";", 39)
+                )).parseSource());
+        Assertions.assertEquals(24, exception.getIndex());
+    }
+
     /**
      * Standard test function. If expected is null, a ParseException is expected
      * to be thrown (not used in the provided tests).

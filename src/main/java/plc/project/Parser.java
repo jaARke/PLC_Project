@@ -17,7 +17,7 @@ import java.util.*;
  * #match(Object...)} are helpers to make the implementation easier.
  *
  * This type of parser is called <em>recursive descent</em>. Each rule in our
- * grammar will have it's own function, and reference to other rules correspond
+ * grammar will have its own function, and reference to other rules correspond
  * to calling that functions.
  */
 public final class Parser {
@@ -40,6 +40,10 @@ public final class Parser {
         }
         while (match("FUN")) {
             functions.add(parseFunction());
+        }
+
+        if (tokens.has(0)) {    // There should be no more tokens after globals and functions have been parsed
+            throw new ParseException("Unexpected token", tokens.get(0).getIndex());
         }
 
         return new Ast.Source(globals, functions);
@@ -359,7 +363,7 @@ public final class Parser {
         Ast.Expression left = null;
         Ast.Expression right = null;
         left = parsePrimaryExpression();
-        while (match("*") || match("\\") || match("^")) {
+        while (match("*") || match("/") || match("^")) {
             String operator = tokens.get(-1).getLiteral();
             right = parsePrimaryExpression();
             left = new Ast.Expression.Binary(operator, left, right);
@@ -391,14 +395,14 @@ public final class Parser {
         }
         else if (match(Token.Type.CHARACTER)) {
             String character = tokens.get(-1).getLiteral();
-            character = character.replace("\'", "");    // Remove opening and closing quotes
+            character = character.substring(1, character.length() - 1);    // Remove opening and closing quotes
             // Replace all literal escape sequences with their actual value:
             character = replaceEscapes(character);
             return new Ast.Expression.Literal(character.charAt(0));
         }
         else if (match(Token.Type.STRING)) {
             String string = tokens.get(-1).getLiteral();
-            string = string.replace("\"", "");  // Remove opening and closing quotes
+            string = string.substring(1, string.length() - 1);  // Remove opening and closing quotes
             // Replace all literal escape sequences with their actual value:
             string = replaceEscapes(string);
             return new Ast.Expression.Literal(string);
@@ -441,7 +445,7 @@ public final class Parser {
         input = input.replace("\\r", "\r");
         input = input.replace("\\t", "\t");
         input = input.replace("\\\"", "\"");
-        input = input.replace("\\'", "\'");
+        input = input.replace("\\'", "'");
         input = input.replace("\\\\", "\\");
         return input;
     }
