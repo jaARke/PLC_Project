@@ -84,11 +84,11 @@ public final class Parser {
         name = tokens.get(-1).getLiteral();
         mustMatch("=");
         mustMatch("[");
-        expressionList.add(parseExpression());  // There must be at least one expression in the list
-        while (!match("]")) {
+        do {
             expressionList.add(parseExpression());
             checkCommas("]");
         }
+        while (!match("]"));
         list = new Ast.Expression.PlcList(expressionList);
 
         return new Ast.Global(name, true, Optional.of(list));
@@ -209,10 +209,11 @@ public final class Parser {
      * statement, aka {@code LET}.
      */
     public Ast.Statement.Declaration parseDeclarationStatement() throws ParseException {
+        String name;
         Optional<Ast.Expression> rightSide = Optional.empty();
 
         mustMatch(Token.Type.IDENTIFIER);
-        String name = tokens.get(-1).getLiteral();
+        name = tokens.get(-1).getLiteral();
         if (match("=")) {   // Receiver is being initialized
             rightSide = Optional.of(parseExpression());
         }
@@ -237,6 +238,7 @@ public final class Parser {
             elseBlock = parseBlock();
         }
         mustMatch("END");
+
         return new Ast.Statement.If(expression, ifBlock, elseBlock);
     }
 
