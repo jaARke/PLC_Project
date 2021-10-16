@@ -1,22 +1,21 @@
 package plc.project;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
 /**
- * See the Parser assignment specification for specific notes on each AST class
- * and how to use it.
+ * See the Interpreter and Parser assignment specifications for specific notes on each AST class
+ * and how they are used.
  */
 public abstract class Ast {
 
     public static final class Source extends Ast {
 
         private final List<Global> globals;
-        private final List<Ast.Function> functions;
+        private final List<Function> functions;
 
-        public Source(List<Global> globals, List<Ast.Function> functions) {
+        public Source(List<Global> globals, List<Function> functions) {
             this.globals = globals;
             this.functions = functions;
         }
@@ -25,7 +24,7 @@ public abstract class Ast {
             return globals;
         }
 
-        public List<Ast.Function> getFunctions() {
+        public List<Function> getFunctions() {
             return functions;
         }
 
@@ -50,9 +49,9 @@ public abstract class Ast {
 
         private final String name;
         private final boolean mutable;
-        private final Optional<Ast.Expression> value;
+        private final Optional<Expression> value;
 
-        public Global(String name, boolean mutable, Optional<Ast.Expression> value) {
+        public Global(String name, boolean mutable, Optional<Expression> value) {
             this.name = name;
             this.mutable = mutable;
             this.value = value;
@@ -66,7 +65,7 @@ public abstract class Ast {
             return mutable;
         }
 
-        public Optional<Ast.Expression> getValue() {
+        public Optional<Expression> getValue() {
             return value;
         }
 
@@ -114,10 +113,10 @@ public abstract class Ast {
 
         @Override
         public boolean equals(Object obj) {
-            return obj instanceof Ast.Function &&
-                    name.equals(((Ast.Function) obj).name) &&
-                    parameters.equals(((Ast.Function) obj).parameters) &&
-                    statements.equals(((Ast.Function) obj).statements);
+            return obj instanceof Function &&
+                    name.equals(((Function) obj).name) &&
+                    parameters.equals(((Function) obj).parameters) &&
+                    statements.equals(((Function) obj).statements);
         }
 
         @Override
@@ -147,8 +146,8 @@ public abstract class Ast {
 
             @Override
             public boolean equals(Object obj) {
-                return obj instanceof Ast.Statement.Expression &&
-                        expression.equals(((Ast.Statement.Expression) obj).expression);
+                return obj instanceof Statement.Expression &&
+                        expression.equals(((Statement.Expression) obj).expression);
             }
 
             @Override
@@ -277,9 +276,9 @@ public abstract class Ast {
         public static final class Switch extends Statement {
 
             private final Ast.Expression condition;
-            private final List<Ast.Statement.Case> cases;
+            private final List<Case> cases;
 
-            public Switch(Ast.Expression condition, List<Ast.Statement.Case> cases) {
+            public Switch(Ast.Expression condition, List<Case> cases) {
                 this.condition = condition;
                 this.cases = cases;
             }
@@ -288,7 +287,7 @@ public abstract class Ast {
                 return condition;
             }
 
-            public List<Ast.Statement.Case> getCases() { return cases; }
+            public List<Case> getCases() { return cases; }
 
             @Override
             public boolean equals(Object obj) {
@@ -408,7 +407,7 @@ public abstract class Ast {
 
     public static abstract class Expression extends Ast {
 
-        public static final class Literal extends Ast.Expression {
+        public static final class Literal extends Expression {
 
             private final Object literal;
 
@@ -435,15 +434,15 @@ public abstract class Ast {
 
         }
 
-        public static final class Group extends Ast.Expression {
+        public static final class Group extends Expression {
 
-            private final Ast.Expression expression;
+            private final Expression expression;
 
-            public Group(Ast.Expression expression) {
+            public Group(Expression expression) {
                 this.expression = expression;
             }
 
-            public Ast.Expression getExpression() {
+            public Expression getExpression() {
                 return expression;
             }
 
@@ -462,13 +461,13 @@ public abstract class Ast {
 
         }
 
-        public static final class Binary extends Ast.Expression {
+        public static final class Binary extends Expression {
 
             private final String operator;
-            private final Ast.Expression left;
-            private final Ast.Expression right;
+            private final Expression left;
+            private final Expression right;
 
-            public Binary(String operator, Ast.Expression left, Ast.Expression right) {
+            public Binary(String operator, Expression left, Expression right) {
                 this.operator = operator;
                 this.left = left;
                 this.right = right;
@@ -478,11 +477,11 @@ public abstract class Ast {
                 return operator;
             }
 
-            public Ast.Expression getLeft() {
+            public Expression getLeft() {
                 return left;
             }
 
-            public Ast.Expression getRight() {
+            public Expression getRight() {
                 return right;
             }
 
@@ -505,17 +504,17 @@ public abstract class Ast {
 
         }
 
-        public static final class Access extends Ast.Expression {
+        public static final class Access extends Expression {
 
-            private final Optional<Ast.Expression> offset;
+            private final Optional<Expression> offset;
             private final String name;
 
-            public Access(Optional<Ast.Expression> offset, String name) {
+            public Access(Optional<Expression> offset, String name) {
                 this.offset = offset;
                 this.name = name;
             }
 
-            public Optional<Ast.Expression> getOffset() {
+            public Optional<Expression> getOffset() {
                 return offset;
             }
 
@@ -540,12 +539,12 @@ public abstract class Ast {
 
         }
 
-        public static final class Function extends Ast.Expression {
+        public static final class Function extends Expression {
 
             private final String name;
-            private final List<Ast.Expression> arguments;
+            private final List<Expression> arguments;
 
-            public Function(String name, List<Ast.Expression> arguments) {
+            public Function(String name, List<Expression> arguments) {
                 this.name = name;
                 this.arguments = arguments;
             }
@@ -554,15 +553,15 @@ public abstract class Ast {
                 return name;
             }
 
-            public List<Ast.Expression> getArguments() {
+            public List<Expression> getArguments() {
                 return arguments;
             }
 
             @Override
             public boolean equals(Object obj) {
-                return obj instanceof Ast.Expression.Function &&
-                        name.equals(((Ast.Expression.Function) obj).name) &&
-                        arguments.equals(((Ast.Expression.Function) obj).arguments);
+                return obj instanceof Expression.Function &&
+                        name.equals(((Expression.Function) obj).name) &&
+                        arguments.equals(((Expression.Function) obj).arguments);
             }
 
             @Override
@@ -575,33 +574,110 @@ public abstract class Ast {
 
         }
 
-        public static final class PlcList extends Ast.Expression {
+        public static final class PlcList extends Expression {
 
-            private final List<Ast.Expression> values;
+            private final List<Expression> values;
 
-            public PlcList(List<Ast.Expression> values) {
+            public PlcList(List<Expression> values) {
                 this.values = values;
             }
 
-            public List<Ast.Expression> getValues() {
+            public List<Expression> getValues() {
                 return values;
             }
 
             @Override
             public boolean equals(Object obj) {
-                return obj instanceof Ast.Expression.PlcList &&
-                        values.equals(((Ast.Expression.PlcList) obj).values);
+                return obj instanceof PlcList &&
+                        values.equals(((PlcList) obj).values);
             }
 
             @Override
             public String toString() {
                 return "Ast.Expression.PlcList{" +
-                        ", values=[" + values + "]" +
+                        "values=[" + values + "]" +
                         '}';
             }
 
         }
 
+    }
+
+    public interface Visitor<T> {
+
+        default T visit(Ast ast) {
+            if (ast instanceof Source) {
+                return visit((Source) ast);
+            } else if (ast instanceof Global) {
+                return visit((Global) ast);
+            } else if (ast instanceof Function) {
+                return visit((Function) ast);
+            } else if (ast instanceof Statement.Expression) {
+                return visit((Statement.Expression) ast);
+            } else if (ast instanceof Statement.Declaration) {
+                return visit((Statement.Declaration) ast);
+            } else if (ast instanceof Statement.Assignment) {
+                return visit((Statement.Assignment) ast);
+            } else if (ast instanceof Statement.If) {
+                return visit((Statement.If) ast);
+            } else if (ast instanceof Statement.Switch) {
+                return visit((Statement.Switch) ast);
+            } else if (ast instanceof Statement.Case) {
+                return visit((Statement.Case) ast);
+            } else if (ast instanceof Statement.While) {
+                return visit((Statement.While) ast);
+            } else if (ast instanceof Statement.Return) {
+                return visit((Statement.Return) ast);
+            } else if (ast instanceof Expression.Literal) {
+                return visit((Expression.Literal) ast);
+            } else if (ast instanceof Expression.Group) {
+                return visit((Expression.Group) ast);
+            } else if (ast instanceof Expression.Binary) {
+                return visit((Expression.Binary) ast);
+            } else if (ast instanceof Expression.Access) {
+                return visit((Expression.Access) ast);
+            } else if (ast instanceof Expression.Function) {
+                return visit((Expression.Function) ast);
+            } else if (ast instanceof Expression.PlcList) {
+                return visit((Expression.PlcList) ast);
+            } else {
+                throw new AssertionError("Unimplemented AST type: " + ast.getClass().getName() + ".");
+            }
+        }
+
+        T visit(Source ast);
+
+        T visit(Global ast);
+
+        T visit(Function ast);
+
+        T visit(Statement.Expression ast);
+
+        T visit(Statement.Declaration ast);
+
+        T visit(Statement.Assignment ast);
+
+        T visit(Statement.If ast);
+
+        T visit(Statement.Switch ast);
+
+        T visit(Statement.Case ast);
+
+        T visit(Statement.While ast);
+
+        T visit(Statement.Return ast);
+
+        T visit(Expression.Literal ast);
+
+        T visit(Expression.Group ast);
+
+        T visit(Expression.Binary ast);
+
+        T visit(Expression.Access ast);
+
+        T visit(Expression.Function ast);
+
+        T visit(Expression.PlcList ast);
     }
 
 }
