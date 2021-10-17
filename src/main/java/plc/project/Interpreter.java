@@ -7,6 +7,7 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
@@ -92,7 +93,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Statement.Return ast) {
-        throw new UnsupportedOperationException(); //TODO
+        throw new Return(visit(ast.getValue()));
     }
 
     @Override
@@ -102,12 +103,122 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Expression.Group ast) {
-        throw new UnsupportedOperationException(); //TODO
+        return visit(ast.getExpression());
     }
 
     @Override
     public Environment.PlcObject visit(Ast.Expression.Binary ast) {
-        throw new UnsupportedOperationException(); //TODO
+        String operator = ast.getOperator();
+        if (operator.equals("&&") || operator.equals("||")) {
+            Environment.PlcObject lhs = visit(ast.getLeft());
+            requireType(Boolean.class, lhs);
+            // Short-circuit cases:
+            if (lhs.getValue().equals(Boolean.FALSE) && operator.equals("&&")) {
+                return lhs;
+            }
+            if (lhs.getValue().equals(Boolean.TRUE) && operator.equals("||")) {
+                return lhs;
+            }
+
+            Environment.PlcObject rhs = visit(ast.getRight());
+            requireType(Boolean.class, rhs);
+            // Find the result:
+            if (operator.equals("&&")) {
+                return Environment.create(Boolean.logicalAnd((boolean) lhs.getValue(), (boolean) rhs.getValue()));
+            }
+            else {
+                return Environment.create(Boolean.logicalOr((boolean) lhs.getValue(), (boolean) rhs.getValue()));
+            }
+        }
+        else if (operator.equals("<") || operator.equals(">")) {
+            Environment.PlcObject lhs = visit(ast.getLeft());
+            Environment.PlcObject rhs = visit(ast.getRight());
+            // Check that classes match:
+            requireType(Comparable.class, lhs);
+            requireType(Comparable.class, rhs);
+            requireType(lhs.getValue().getClass(), rhs);
+            // Find the result:
+            return Environment.create(Boolean.valueOf(lhs.getValue() + operator + rhs.getValue()));
+        }
+        else if (operator.equals("==") || operator.equals("!=")) {
+            Environment.PlcObject lhs = visit(ast.getLeft());
+            Environment.PlcObject rhs = visit(ast.getRight());
+            return Environment.create(Objects.equals(lhs.getValue(), rhs.getValue()));   // Are their values equal to one another?
+        }
+        else if (operator.equals("+")) {
+            Environment.PlcObject lhs = visit(ast.getLeft());
+            Environment.PlcObject rhs = visit(ast.getRight());
+            if (lhs.getValue() instanceof String || rhs.getValue() instanceof String) {
+                 return Environment.create("" + lhs.getValue() + rhs.getValue());
+            }
+            else if (lhs.getValue() instanceof BigDecimal) {
+                requireType(BigDecimal.class, rhs);
+                return Environment.create(((BigDecimal) lhs.getValue()).add((BigDecimal) rhs.getValue()));
+            }
+            else if (lhs.getValue() instanceof BigInteger) {
+                requireType(BigInteger.class, rhs);
+                return Environment.create(((BigInteger) lhs.getValue()).add((BigInteger) rhs.getValue()));
+            }
+            else {
+                throw new RuntimeException("Invalid arithmetic operation detected at runtime.");
+            }
+        }
+        else if (operator.equals("*") || operator.equals("-")) {
+            Environment.PlcObject lhs = visit(ast.getLeft());
+            Environment.PlcObject rhs = visit(ast.getRight());
+            if (lhs.getValue() instanceof BigDecimal) {
+                requireType(BigDecimal.class, rhs);
+                if (operator.equals("*")) {
+                    return Environment.create(((BigDecimal) lhs.getValue()).multiply((BigDecimal) rhs.getValue()));
+                }
+                else {
+                    return Environment.create(((BigDecimal) lhs.getValue()).subtract((BigDecimal) rhs.getValue()));
+                }
+            }
+            else if (lhs.getValue() instanceof BigInteger) {
+                requireType(BigInteger.class, rhs);
+                if (operator.equals("*")) {
+                    return Environment.create(((BigInteger) lhs.getValue()).multiply((BigInteger) rhs.getValue()));
+                }
+                else {
+                    return Environment.create(((BigInteger) lhs.getValue()).subtract((BigInteger) rhs.getValue()));
+                }
+            }
+            else {
+                throw new RuntimeException("Invalid arithmetic operation detected at runtime.");
+            }
+        }
+        else if (operator.equals("/")) {
+            Environment.PlcObject lhs = visit(ast.getLeft());
+            Environment.PlcObject rhs = visit(ast.getRight());
+            if (lhs.getValue() instanceof BigDecimal) {
+                requireType(BigDecimal.class, rhs);
+                return Environment.create(((BigDecimal) lhs.getValue()).divide((BigDecimal) rhs.getValue(), RoundingMode.HALF_EVEN));
+            }
+            else if (lhs.getValue() instanceof BigInteger) {
+                requireType(BigInteger.class, rhs);
+                return Environment.create(((BigInteger) lhs.getValue()).divide((BigInteger) rhs.getValue()));
+            }
+            else {
+                throw new RuntimeException("Invalid arithmetic operation detected at runtime.");
+            }
+        }
+        else if (operator.equals("^")) {
+            Environment.PlcObject lhs = visit(ast.getLeft());
+            Environment.PlcObject rhs = visit(ast.getRight());
+            if (lhs.getValue() instanceof BigDecimal) {
+                requireType(BigDecimal.class, rhs);
+                return Environment.create(Math.pow((double) lhs.getValue(), (double) rhs.getValue()));
+            }
+            else if (lhs.getValue() instanceof BigInteger) {
+                requireType(BigInteger.class, rhs);
+                return Environment.create(((BigInteger) lhs.getValue()).pow((int) rhs.getValue()));
+            }
+            else {
+                throw new RuntimeException("Invalid arithmetic operation detected at runtime.");
+            }
+        }
+        throw new RuntimeException("Invalid binary expression detected at runtime.");
     }
 
     @Override
@@ -115,9 +226,10 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         Environment.PlcObject result = null;
         Environment.Variable var = scope.lookupVariable(ast.getName());
         if (ast.getOffset().isPresent()) {
-            Environment.PlcObject offset = Environment.create(ast.getOffset());
+            Environment.PlcObject offset = visit(ast.getOffset().get());
             requireType(BigInteger.class, offset);
-            result = visit(((Ast.Expression.PlcList) var.getValue().getValue()).getValues().get((int) offset.getValue()));  // Get the list of values, go to the desired offset, visit the residing expression, and return its appropriate PlcObject
+            // Get the list of values, go to the desired offset, visit the residing expression, and return its appropriate PlcObject:
+            result = visit(((Ast.Expression.PlcList) var.getValue().getValue()).getValues().get((int) offset.getValue()));
         }
         else {
             result = Environment.create(var.getValue());
