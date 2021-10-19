@@ -31,17 +31,45 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Source ast) {
-        throw new UnsupportedOperationException(); //TODO
+        ast.getGlobals().forEach(this::visit);
+        ast.getFunctions().forEach(this::visit);
+        Environment.Function mainFunc = scope.lookupFunction("main", 0);
+        return mainFunc.invoke(Collections.emptyList());
     }
 
     @Override
     public Environment.PlcObject visit(Ast.Global ast) {
-        throw new UnsupportedOperationException(); //TODO
+        if (ast.getValue().isPresent()) {
+            scope.defineVariable(ast.getName(), ast.getMutable(), visit(ast.getValue().get()));
+        }
+        else {
+            scope.defineVariable(ast.getName(), ast.getMutable(), Environment.NIL);
+        }
+        return Environment.NIL;
     }
 
     @Override
     public Environment.PlcObject visit(Ast.Function ast) {
-        throw new UnsupportedOperationException(); //TODO
+        scope.defineFunction(ast.getName(), ast.getParameters().size(), args -> {
+            scope = new Scope(scope);
+            // Define all the arguments as variables:
+            for (int i = 0; i < ast.getParameters().size(); i++) {
+                scope.defineVariable(ast.getParameters().get(0), true, args.get(0));
+            }
+            // Interpret the function statements until you run out or a return is thrown:
+            try {
+                ast.getStatements().forEach(this::visit);
+            }
+            // Restore scope and return the return value:
+            catch (Return returnValue) {
+                scope = scope.getParent();
+                return returnValue.value;
+            }
+            // Restore the scope and return NIL:
+            scope = scope.getParent();
+            return Environment.NIL;
+        });
+        return Environment.NIL;
     }
 
     @Override
@@ -52,10 +80,10 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Statement.Declaration ast) {
-        if (ast.getValue().isPresent()) {
+        if (ast.getValue().isPresent()) {   // Variable is being initialized -> visit its value
             scope.defineVariable(ast.getName(), true, visit(ast.getValue().get()));
         }
-        else {
+        else {  // Variable is not being initialized -> set its value to be NIL
             scope.defineVariable(ast.getName(), true, Environment.NIL);
         }
         return Environment.NIL;
@@ -89,22 +117,23 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Statement.If ast) {
+        // Evaluate the if statement's expression:
         Environment.PlcObject evalExpr = visit(ast.getCondition());
         requireType(Boolean.class, evalExpr);
         scope = new Scope(scope);
-        if (evalExpr.getValue().equals(Boolean.TRUE)) {
+        if (evalExpr.getValue().equals(Boolean.TRUE)) { // The if statement's expression is true, execute the then statements
             try {
                 ast.getThenStatements().forEach(this::visit);
             }
-            finally {
+            finally {   // Restore scope regardless of exceptions
                 scope = scope.getParent();
             }
         }
-        else {
+        else {  // The if statement's expression is false, execute the else statements
             try {
                 ast.getElseStatements().forEach(this::visit);
             }
-            finally {
+            finally {   // Restore scope regardless of exceptions
                 scope = scope.getParent();
             }
         }
@@ -122,7 +151,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
             for (Ast.Statement.Case x : cases) {
                 if (x.getValue().isPresent()) {
                     Environment.PlcObject evalCase = visit(x.getValue().get());
-                    if (evalExpr.getValue().equals(evalCase.getValue())) {
+                    if (evalExpr.getValue().equals(evalCase.getValue())) {  // The case evaluates to true -> execute its block and break out of the loop
                         visit(x);
                         break;
                     }
@@ -133,7 +162,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
                 }
             }
         }
-        finally {
+        finally {   // Restore scope regardless of exceptions thrown while evaluating cases
             scope = scope.getParent();
         }
         return Environment.NIL;
@@ -141,18 +170,18 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Statement.Case ast) {
-        ast.getStatements().forEach(this::visit);
+        ast.getStatements().forEach(this::visit);   // Execute each statement in the case block
         return Environment.NIL;
     }
 
     @Override
     public Environment.PlcObject visit(Ast.Statement.While ast) {
-        while (requireType(Boolean.class, visit(ast.getCondition()))) {
-            try {
+        while (requireType(Boolean.class, visit(ast.getCondition()))) { // As long as the while condition holds true...
+            try {   // Evaluate the statements in the while block
                 scope = new Scope(scope);
                 ast.getStatements().forEach(this::visit);
             }
-            finally {
+            finally {   // Restore scope regardless of exceptions
                 scope = scope.getParent();
             }
         }
@@ -166,7 +195,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Expression.Literal ast) {
-        if (ast.getLiteral() == null) {
+        if (ast.getLiteral() == null) { // Special case for null literals
             return Environment.NIL;
         }
         return Environment.create(ast.getLiteral());
@@ -235,7 +264,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
             case "+": {
                 Environment.PlcObject lhs = visit(ast.getLeft());
                 Environment.PlcObject rhs = visit(ast.getRight());
-                if (lhs.getValue() instanceof String || rhs.getValue() instanceof String) {
+                if (lhs.getValue() instanceof String || rhs.getValue() instanceof String) { // String concatenation
                     return Environment.create("" + lhs.getValue() + rhs.getValue());
                 }
                 else if (lhs.getValue() instanceof BigDecimal) {
@@ -294,34 +323,34 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
             case "^": {
                 Environment.PlcObject lhs = visit(ast.getLeft());
                 Environment.PlcObject rhs = visit(ast.getRight());
+                requireType(BigInteger.class, rhs);
                 if (lhs.getValue() instanceof BigDecimal) {
-                    requireType(BigDecimal.class, rhs);
-                    return Environment.create(Math.pow((double) lhs.getValue(), (double) rhs.getValue()));
+                    return Environment.create(((BigDecimal) lhs.getValue()).pow(((BigInteger) rhs.getValue()).intValue()));
                 }
                 else if (lhs.getValue() instanceof BigInteger) {
-                    requireType(BigInteger.class, rhs);
-                    return Environment.create(((BigInteger) lhs.getValue()).pow((int) rhs.getValue()));
+                    return Environment.create(((BigInteger) lhs.getValue()).pow(((BigInteger) rhs.getValue()).intValue()));
                 }
                 else {
                     throw new RuntimeException("Invalid arithmetic operation detected at runtime.");
                 }
             }
+            default:
+                throw new RuntimeException("Invalid binary expression detected at runtime.");
         }
-        throw new RuntimeException("Invalid binary expression detected at runtime.");
     }
 
     @Override
     public Environment.PlcObject visit(Ast.Expression.Access ast) {
         Environment.PlcObject result = null;
         Environment.Variable var = scope.lookupVariable(ast.getName());
-        if (ast.getOffset().isPresent()) {
+        if (ast.getOffset().isPresent()) {  // A list value is being accessed
             Environment.PlcObject offset = visit(ast.getOffset().get());
             requireType(BigInteger.class, offset);
             requireType(List.class, var.getValue());
             // Get the list of values, go to the desired offset, and return its appropriate value (wrapping it as a PlcObject):
             result = Environment.create(((List<Environment.PlcObject>) var.getValue().getValue()).get(((BigInteger) offset.getValue()).intValue()));
         }
-        else {
+        else {  // A normal variable is being accessed
             result = Environment.create(var.getValue().getValue());
         }
         return result;
@@ -330,7 +359,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     @Override
     public Environment.PlcObject visit(Ast.Expression.Function ast) {
         Environment.Function func = scope.lookupFunction(ast.getName(), ast.getArguments().size());    // Does the function exist in this scope?
-        List<Environment.PlcObject> evalExpr = new ArrayList<>();
+        List<Environment.PlcObject> evalExpr = new ArrayList<>();   // Stores the evaluated argument expressions for passing to the function
         for (Ast.Expression expr : ast.getArguments()) {
             evalExpr.add(visit(expr));
         }

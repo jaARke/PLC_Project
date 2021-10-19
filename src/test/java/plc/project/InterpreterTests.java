@@ -373,6 +373,20 @@ final class InterpreterTests {
                                 new Ast.Expression.Literal(new BigDecimal("3.4"))
                         ),
                         new BigDecimal("0.4")
+                ),
+                Arguments.of("Integer Power",
+                        new Ast.Expression.Binary("^",
+                                new Ast.Expression.Literal(new BigInteger("10")),
+                                new Ast.Expression.Literal(new BigInteger("2"))
+                        ),
+                        new BigInteger("100")
+                ),
+                Arguments.of("Decimal Power",
+                        new Ast.Expression.Binary("^",
+                                new Ast.Expression.Literal(new BigDecimal("10.77")),
+                                new Ast.Expression.Literal(new BigInteger("3"))
+                        ),
+                        new BigDecimal("1249.243533")   // Do we need to round the power function?
                 )
         );
     }
