@@ -50,23 +50,27 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Function ast) {
+        Scope decScope = scope;     // Capture the declaring scope
         scope.defineFunction(ast.getName(), ast.getParameters().size(), args -> {
-            scope = new Scope(scope);
+            Scope invScope = scope;     // Capture the invoking scope
+            scope = new Scope(decScope);    // Set the function scope to be a new child of the declaring scope
             // Define all the arguments as variables:
             for (int i = 0; i < ast.getParameters().size(); i++) {
-                scope.defineVariable(ast.getParameters().get(0), true, args.get(0));
+                scope.defineVariable(ast.getParameters().get(i), true, args.get(i));
             }
             // Interpret the function statements until you run out or a return is thrown:
             try {
                 ast.getStatements().forEach(this::visit);
             }
-            // Restore scope and return the return value:
+            // Return the return value (if found):
             catch (Return returnValue) {
-                scope = scope.getParent();
                 return returnValue.value;
             }
-            // Restore the scope and return NIL:
-            scope = scope.getParent();
+            // Restore the scope in all cases:
+            finally {
+                scope = invScope;
+            }
+            // Return NIL (if a return was not caught):
             return Environment.NIL;
         });
         return Environment.NIL;
@@ -103,7 +107,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
             throw new RuntimeException("Cannot assign to an immutable variable.");
         }
         // List value is being assigned:
-        if (((Ast.Expression.Access) ast.getReceiver()).getOffset().isPresent()) {
+        if (recAccess.getOffset().isPresent()) {
             requireType(List.class, var.getValue());
             int offset = ((BigInteger) visit(recAccess.getOffset().get()).getValue()).intValue();
             ((List<Object>) var.getValue().getValue()).set(offset, val.getValue());
@@ -143,8 +147,8 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     @Override
     public Environment.PlcObject visit(Ast.Statement.Switch ast) {
         // Set a new scope for the switch block and get its components:
-        scope = new Scope(scope);
         Environment.PlcObject evalExpr = visit(ast.getCondition());
+        scope = new Scope(scope);
         List<Ast.Statement.Case> cases = ast.getCases();
         // Evaluate whether the condition maps to any case:
         try {

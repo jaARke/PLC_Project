@@ -244,6 +244,24 @@ final class ParserTests {
                                 new Ast.Expression.Access(Optional.empty(), "expr"),
                                 Arrays.asList(new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt")))
                         )
+                ),
+                Arguments.of("While 2",
+                    Arrays.asList(
+                //        WHILE x < 6 DO stmt; END
+                        new Token(Token.Type.IDENTIFIER, "WHILE", 17),
+                        new Token(Token.Type.IDENTIFIER, "x", 23),
+                        new Token(Token.Type.OPERATOR, "<", 25),
+                        new Token(Token.Type.INTEGER, "6", 27),
+                        new Token(Token.Type.IDENTIFIER, "DO", 32),
+                        new Token(Token.Type.IDENTIFIER, "x", 40),
+                        new Token(Token.Type.OPERATOR, "*", 42),
+                        new Token(Token.Type.INTEGER, "2", 44),
+                        new Token(Token.Type.OPERATOR, ";", 45),
+                        new Token(Token.Type.IDENTIFIER, "END", 47)
+                    ),
+                    new Ast.Statement.While(
+                            new Ast.Expression.Binary("<", new Ast.Expression.Access(Optional.empty(), "x"), new Ast.Expression.Literal(new BigInteger("6"))),
+                            Arrays.asList(new Ast.Statement.Expression(new Ast.Expression.Binary("*", new Ast.Expression.Access(Optional.empty(), "x"), new Ast.Expression.Literal("2")))))
                 )
         );
     }
@@ -534,11 +552,12 @@ final class ParserTests {
         test(input, expected, Parser::parseSource);
     }
 
+
     @Test
     void testException() {
         ParseException exception = Assertions.assertThrows(ParseException.class,
                 () -> new Parser(Arrays.asList(
-                        // FUN name() DO stmt; END␊VAR name = expr;
+                        // FUN name() DO stmt; END VAR name = expr;
                         new Token(Token.Type.IDENTIFIER, "FUN", 0),
                         new Token(Token.Type.IDENTIFIER, "name", 4),
                         new Token(Token.Type.OPERATOR, "(", 8),
