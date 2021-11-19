@@ -94,15 +94,6 @@ public final class AnalyzerTests {
                         // VAR name: Unknown;
                         new Ast.Global("name", "Unknown", true, Optional.empty()),
                         null
-                ),
-                Arguments.of("Valid List",
-                        // LIST list: Integer = [1, 2, 3];
-                        new Ast.Global("list", "Integer", true, Optional.of(new Ast.Expression.PlcList(Arrays.asList(new Ast.Expression.Literal(new BigInteger("1")), new Ast.Expression.Literal(new BigInteger("2")), new Ast.Expression.Literal(new BigInteger("3")))))),
-                        init(new Ast.Global("list", "Integer", true,
-                                Optional.of(new Ast.Expression.PlcList(Arrays.asList(new Ast.Expression.Literal(new BigInteger("1")), new Ast.Expression.Literal(new BigInteger("2")), new Ast.Expression.Literal(new BigInteger("3")))))),
-                                        ast -> {
-                                            ast.setVariable(new Environment.Variable("name", "name", Environment.Type.INTEGER, true, Environment.NIL));
-                                        })
                 )
         );
     }

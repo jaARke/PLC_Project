@@ -287,13 +287,8 @@ public final class Analyzer implements Ast.Visitor<Void> {
                 visit(ast.getLeft());
                 visit(ast.getRight());
                 // Check that both sides of the expression are subtypes of COMPARABLE:
-                try {
-                    requireAssignable(Environment.Type.COMPARABLE, ast.getLeft().getType());
-                    requireAssignable(Environment.Type.COMPARABLE, ast.getRight().getType());
-                }
-                catch (RuntimeException e) {
-                    throw new RuntimeException("Both sides of equality statement must be of type COMPARABLE");
-                }
+                requireAssignable(Environment.Type.COMPARABLE, ast.getLeft().getType());
+                requireAssignable(Environment.Type.COMPARABLE, ast.getRight().getType());
                 // Check that both sides of the expression are of the same type. If so, assign a type to the AST:
                 if (ast.getLeft().getType().equals(ast.getRight().getType())) {
                     ast.setType(Environment.Type.BOOLEAN);
