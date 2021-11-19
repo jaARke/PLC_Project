@@ -45,6 +45,10 @@ public final class Analyzer implements Ast.Visitor<Void> {
     public Void visit(Ast.Global ast) {
         // If the value is present, visit it. Then check that it is assignable to the variable:
         if (ast.getValue().isPresent()) {
+            // Check if the value is a list. If so, set its type to be the same type as the list variable (actual type checking occurs in the visit(Ast.Expression.PlcList) function):
+            if (ast.getValue().get() instanceof Ast.Expression.PlcList) {
+                ((Ast.Expression.PlcList) ast.getValue().get()).setType(Environment.getType(ast.getTypeName()));
+            }
             visit(ast.getValue().get());
             requireAssignable(Environment.getType(ast.getTypeName()), ast.getValue().get().getType());
         }

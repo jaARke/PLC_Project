@@ -77,11 +77,19 @@ public final class Parser {
      */
     public Ast.Global parseList() throws ParseException {
         String name;
+        String type;
         Ast.Expression.PlcList list;
         List<Ast.Expression> expressionList = new ArrayList<>();
 
+        // Get the name of the list variable:
         mustMatch(Token.Type.IDENTIFIER);
         name = tokens.get(-1).getLiteral();
+
+        // Get the type of the list:
+        mustMatch(":");
+        mustMatch(Token.Type.IDENTIFIER);
+        type = tokens.get(-1).getLiteral();
+
         mustMatch("=");
         mustMatch("[");
         do {
@@ -91,7 +99,8 @@ public final class Parser {
         while (!match("]"));
         list = new Ast.Expression.PlcList(expressionList);
 
-        return new Ast.Global(name, true, Optional.of(list));
+        // Use the new Ast.Global constructor to return the object:
+        return new Ast.Global(name, type, true, Optional.of(list));
     }
 
     /**
@@ -141,7 +150,6 @@ public final class Parser {
         mustMatch("(");
 
         while (!match(")")) {
-            mustMatch(Token.Type.IDENTIFIER);
             parameters.add(tokens.get(-1).getLiteral());
             checkCommas(")");
         }
