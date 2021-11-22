@@ -32,12 +32,16 @@ public final class Parser {
      * Parses the {@code source} rule.
      */
     public Ast.Source parseSource() throws ParseException {
+        // Declare variables:
         List<Ast.Global> globals = new ArrayList<>();
         List<Ast.Function> functions = new ArrayList<>();
 
+        // Parsing globals:
         while (peek("LIST") || peek("VAR") || peek("VAL")) {
             globals.add(parseGlobal());
         }
+
+        // Parsing functions:
         while (match("FUN")) {
             functions.add(parseFunction());
         }
@@ -54,8 +58,10 @@ public final class Parser {
      * next tokens start a field, aka {@code LET}.
      */
     public Ast.Global parseGlobal() throws ParseException {
+        // Declare return variable:
         Ast.Global result;
 
+        // What kind of global is being parsed?
         if (match("LIST")) {
             result = parseList();
         }
@@ -76,6 +82,7 @@ public final class Parser {
      * next token declares a list, aka {@code LIST}.
      */
     public Ast.Global parseList() throws ParseException {
+        // Declare variables:
         String name;
         String type;
         Ast.Expression.PlcList list;
@@ -108,16 +115,24 @@ public final class Parser {
      * next token declares a mutable global variable, aka {@code VAR}.
      */
     public Ast.Global parseMutable() throws ParseException {
+        // Declare variables:
         String name;
+        String type;
         Optional<Ast.Expression> expression = Optional.empty();
 
+        // Get the variable name:
         mustMatch(Token.Type.IDENTIFIER);
         name = tokens.get(-1).getLiteral();
+        // Get the variable type:
+        mustMatch(":");
+        mustMatch(Token.Type.IDENTIFIER);
+        type = tokens.get(-1).getLiteral();
+
         if (match("=")) {
             expression = Optional.of(parseExpression());
         }
 
-        return new Ast.Global(name, true, expression);
+        return new Ast.Global(name, type, true, expression);
     }
 
     /**
@@ -125,15 +140,23 @@ public final class Parser {
      * next token declares an immutable global variable, aka {@code VAL}.
      */
     public Ast.Global parseImmutable() throws ParseException {
+        // Declare variables:
         String name;
+        String type;
         Optional<Ast.Expression> expression;
 
+        // Get the variable name:
         mustMatch(Token.Type.IDENTIFIER);
         name = tokens.get(-1).getLiteral();
+        // Get the variable type:
+        mustMatch(":");
+        mustMatch(Token.Type.IDENTIFIER);
+        type = tokens.get(-1).getLiteral();
+
         mustMatch("=");
         expression = Optional.of(parseExpression());
 
-        return new Ast.Global(name, false, expression);
+        return new Ast.Global(name, type,false, expression);
     }
 
     /**
@@ -141,8 +164,11 @@ public final class Parser {
      * next tokens start a method, aka {@code DEF}.
      */
     public Ast.Function parseFunction() throws ParseException {
+        // Declare variables:
         String name;
-        List<String> parameters = new ArrayList<>();
+        List<String> paramNames = new ArrayList<>();
+        List<String> paramTypes = new ArrayList<>();
+        Optional<String> retType = Optional.empty();
         List<Ast.Statement> statements;
 
         mustMatch(Token.Type.IDENTIFIER);
@@ -150,15 +176,27 @@ public final class Parser {
         mustMatch("(");
 
         while (!match(")")) {
-            parameters.add(tokens.get(-1).getLiteral());
+            // Get the parameter name:
+            mustMatch(Token.Type.IDENTIFIER);
+            paramNames.add(tokens.get(-1).getLiteral());
+            // Get the parameter type:
+            mustMatch(":");
+            mustMatch(Token.Type.IDENTIFIER);
+            paramTypes.add(tokens.get(-1).getLiteral());
+
             checkCommas(")");
         }
-
+        // Get the return type, if present:
+        if (match(":")) {
+            mustMatch(Token.Type.IDENTIFIER);
+            retType = Optional.of(tokens.get(-1).getLiteral());
+        }
+        // Parse the function block:
         mustMatch("DO");
         statements = parseBlock();
         mustMatch("END");
 
-        return new Ast.Function(name, parameters, statements);
+        return new Ast.Function(name, paramNames, paramTypes, retType, statements);
     }
 
     /**
@@ -217,17 +255,26 @@ public final class Parser {
      * statement, aka {@code LET}.
      */
     public Ast.Statement.Declaration parseDeclarationStatement() throws ParseException {
+        // Declare variables:
         String name;
+        Optional<String> type = Optional.empty();
         Optional<Ast.Expression> rightSide = Optional.empty();
 
+        // Get the variable name:
         mustMatch(Token.Type.IDENTIFIER);
         name = tokens.get(-1).getLiteral();
+        // Get the variable type (if present):
+        if (match(":")) {
+            mustMatch(Token.Type.IDENTIFIER);
+            type = Optional.of(tokens.get(-1).getLiteral());
+        }
+
         if (match("=")) {   // Receiver is being initialized
             rightSide = Optional.of(parseExpression());
         }
         mustMatch(";");
 
-        return new Ast.Statement.Declaration(name, rightSide);
+        return new Ast.Statement.Declaration(name, type, rightSide);
     }
 
     /**
