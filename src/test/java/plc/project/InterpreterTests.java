@@ -54,14 +54,14 @@ final class InterpreterTests {
                         ),
                         Arrays.asList(
                                 new Ast.Function("f", Arrays.asList("z"), Arrays.asList(
-                                    new Ast.Statement.Return(new Ast.Expression.Binary("+",
-                                            new Ast.Expression.Binary("+", new Ast.Expression.Access(Optional.empty(), "x"), new Ast.Expression.Access(Optional.empty(), "y")),
-                                            new Ast.Expression.Access(Optional.empty(), "z")))
-                        )),
-                               new Ast.Function("main", Arrays.asList(), Arrays.asList(
-                                     new Ast.Statement.Declaration("y", Optional.of(new Ast.Expression.Literal(BigInteger.valueOf(4)))),
-                                     new Ast.Statement.Return(new Ast.Expression.Function("f", Arrays.asList(new Ast.Expression.Literal(BigInteger.valueOf(5)))))
-                               )))
+                                        new Ast.Statement.Return(new Ast.Expression.Binary("+",
+                                                new Ast.Expression.Binary("+", new Ast.Expression.Access(Optional.empty(), "x"), new Ast.Expression.Access(Optional.empty(), "y")),
+                                                new Ast.Expression.Access(Optional.empty(), "z")))
+                                )),
+                                new Ast.Function("main", Arrays.asList(), Arrays.asList(
+                                        new Ast.Statement.Declaration("y", Optional.of(new Ast.Expression.Literal(BigInteger.valueOf(4)))),
+                                        new Ast.Statement.Return(new Ast.Expression.Function("f", Arrays.asList(new Ast.Expression.Literal(BigInteger.valueOf(5)))))
+                                )))
                 ), BigInteger.valueOf(8))
         );
     }

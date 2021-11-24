@@ -147,8 +147,8 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     @Override
     public Environment.PlcObject visit(Ast.Statement.Switch ast) {
         // Set a new scope for the switch block and get its components:
-        Environment.PlcObject evalExpr = visit(ast.getCondition());
         scope = new Scope(scope);
+        Environment.PlcObject evalExpr = visit(ast.getCondition());
         List<Ast.Statement.Case> cases = ast.getCases();
         // Evaluate whether the condition maps to any case:
         try {
