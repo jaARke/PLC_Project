@@ -70,9 +70,66 @@ final class ParserTests {
                                         new Ast.Statement.Expression(new Ast.Expression.Access(Optional.empty(), "stmt"))
                                 )))
                         )
+                ),
+                Arguments.of("List -- Multiples",
+                        Arrays.asList(
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.IDENTIFIER, "list", 5),
+                                new Token(Token.Type.OPERATOR, ":", 9),
+                                new Token(Token.Type.IDENTIFIER, "Type", 11),
+                                new Token(Token.Type.OPERATOR, "=", 16),
+                                new Token(Token.Type.OPERATOR, "[", 18),
+                                new Token(Token.Type.IDENTIFIER, "expr1", 19),
+                                new Token(Token.Type.OPERATOR, ",", 24),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 26),
+                                new Token(Token.Type.OPERATOR, ",", 31),
+                                new Token(Token.Type.IDENTIFIER, "expr3", 33),
+                                new Token(Token.Type.OPERATOR, "]", 38),
+                                new Token(Token.Type.OPERATOR, ";", 39)
+                        ),
+                        new Ast.Source(
+                                Arrays.asList(new Ast.Global("list", "Type", true, Optional.of(new Ast.Expression.PlcList(Arrays.asList(
+                                        new Ast.Expression.Access(Optional.empty(), "expr1"),
+                                        new Ast.Expression.Access(Optional.empty(), "expr2"),
+                                        new Ast.Expression.Access(Optional.empty(), "expr3")))))),
+                                Arrays.asList())
+                        )
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource
+    void testGlobal(String test, List<Token> tokens, Ast.Global expected) {
+        test(tokens, expected, Parser::parseGlobal);
+    }
+
+    private static Stream<Arguments> testGlobal() {
+        return Stream.of(
+                Arguments.of("List -- Multiples",
+                        Arrays.asList(
+                                new Token(Token.Type.IDENTIFIER, "LIST", 0),
+                                new Token(Token.Type.IDENTIFIER, "list", 5),
+                                new Token(Token.Type.OPERATOR, ":", 9),
+                                new Token(Token.Type.IDENTIFIER, "Type", 11),
+                                new Token(Token.Type.OPERATOR, "=", 16),
+                                new Token(Token.Type.OPERATOR, "[", 18),
+                                new Token(Token.Type.IDENTIFIER, "expr1", 19),
+                                new Token(Token.Type.OPERATOR, ",", 24),
+                                new Token(Token.Type.IDENTIFIER, "expr2", 26),
+                                new Token(Token.Type.OPERATOR, ",", 31),
+                                new Token(Token.Type.IDENTIFIER, "expr3", 33),
+                                new Token(Token.Type.OPERATOR, "]", 38),
+                                new Token(Token.Type.OPERATOR, ";", 39)
+                        ),
+                        new Ast.Global("list", "Type", true, Optional.of(new Ast.Expression.PlcList(Arrays.asList(
+                                new Ast.Expression.Access(Optional.empty(), "expr1"),
+                                new Ast.Expression.Access(Optional.empty(), "expr2"),
+                                new Ast.Expression.Access(Optional.empty(), "expr3")
+                        ))))
                 )
         );
     }
+
 
     @ParameterizedTest
     @MethodSource

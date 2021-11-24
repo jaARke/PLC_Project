@@ -42,7 +42,7 @@ public final class Parser {
         }
 
         // Parsing functions:
-        while (match("FUN")) {
+        while (peek("FUN")) {
             functions.add(parseFunction());
         }
 
@@ -62,14 +62,13 @@ public final class Parser {
         Ast.Global result;
 
         // What kind of global is being parsed?
-        if (match("LIST")) {
+        if (peek("LIST")) {
             result = parseList();
         }
-        else if (match("VAR")) {
+        else if (peek("VAR")) {
             result = parseMutable();
         }
         else  {
-            match("VAL");
             result = parseImmutable();
         }
         mustMatch(";");
@@ -82,6 +81,8 @@ public final class Parser {
      * next token declares a list, aka {@code LIST}.
      */
     public Ast.Global parseList() throws ParseException {
+        // Progress past the keyword:
+        match("LIST");
         // Declare variables:
         String name;
         String type;
@@ -115,6 +116,8 @@ public final class Parser {
      * next token declares a mutable global variable, aka {@code VAR}.
      */
     public Ast.Global parseMutable() throws ParseException {
+        // Progress past the keyword:
+        match("VAR");
         // Declare variables:
         String name;
         String type;
@@ -140,6 +143,8 @@ public final class Parser {
      * next token declares an immutable global variable, aka {@code VAL}.
      */
     public Ast.Global parseImmutable() throws ParseException {
+        // Progress past the keyword:
+        match("VAL");
         // Declare variables:
         String name;
         String type;
@@ -164,6 +169,8 @@ public final class Parser {
      * next tokens start a method, aka {@code DEF}.
      */
     public Ast.Function parseFunction() throws ParseException {
+        // Progress past the keyword:
+        match("FUN");
         // Declare variables:
         String name;
         List<String> paramNames = new ArrayList<>();
