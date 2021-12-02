@@ -53,10 +53,8 @@ public final class Generator implements Ast.Visitor<Void> {
         newline(indent);
         print("}");
         // Print the functions using indentation
-        if (ast.getFunctions().size() != 0) {   // Otherwise, the single indent is taken care of below
-            newline(0);
-        }
         for (int i = 0; i < ast.getFunctions().size(); i++) {
+            newline(0);
             newline(indent);
             visit(ast.getFunctions().get(i));
         }
@@ -100,7 +98,7 @@ public final class Generator implements Ast.Visitor<Void> {
         // Print the list of parameters (typename name, typename name, etc.)
         for (int i = 0; i < ast.getParameters().size(); i++) {
             print(Environment.getType(ast.getParameterTypeNames().get(i)).getJvmName() + " ");
-            print(ast.getParameterTypeNames().get(i));
+            print(ast.getParameters().get(i));
             // If it is not the last parameter, print a comma and then a space
             if (i != ast.getParameters().size() - 1) {
                 print(", ");
