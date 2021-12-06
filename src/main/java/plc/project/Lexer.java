@@ -87,7 +87,7 @@ public final class Lexer {
         }
         else if (match("-")) {
             if (!peek("[0-9]")) {   // The hyphen is being used as an operator
-                return lexOperator();
+                return chars.emit(OPERATOR);
             }
             return lexNumber(); // Call the function to lex the actual number part (after the hyphen has been consumed)
         }
@@ -139,7 +139,7 @@ public final class Lexer {
     }
 
     public void lexEscape() {   // Matches to a valid escape sequence, error if invalid
-        if (!match("[bnrt'\\\"]")) {
+        if (!match("[bnrt'\\\\\"]")) {
             throw new ParseException("Invalid escape sequence", chars.index);
         }
     }
