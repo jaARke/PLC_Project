@@ -6,11 +6,9 @@ import javax.crypto.Cipher;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.MathContext;
 import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
@@ -241,16 +239,11 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
                 Environment.PlcObject rhs = visit(ast.getRight());
                 // Check that classes match:
                 requireType(lhs.getValue().getClass(), rhs);
-                requireType(Comparable.class, lhs);
-                requireType(Comparable.class, rhs);
-                // Find the result:
+                Comparable compLhs = requireType(Comparable.class, lhs);
+                Comparable compRhs = requireType(Comparable.class, rhs);
+                // Find the result
                 int compVal = 0;
-                if (lhs.getValue() instanceof BigDecimal) {
-                    compVal = ((BigDecimal) lhs.getValue()).compareTo((BigDecimal) rhs.getValue());
-                }
-                else {
-                    compVal = ((BigInteger) lhs.getValue()).compareTo((BigInteger) rhs.getValue());
-                }
+                compVal = compLhs.compareTo(compRhs);
                 if ((compVal < 0 && operator.equals("<")) || (compVal > 0 && operator.equals(">"))) {
                     return Environment.create(Boolean.TRUE);
                 }
@@ -258,12 +251,15 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
                     return Environment.create(Boolean.FALSE);
                 }
             }
-            case "==":
-            case "!=": {
+            case "==": {
                 Environment.PlcObject lhs = visit(ast.getLeft());
                 Environment.PlcObject rhs = visit(ast.getRight());
                 return Environment.create(Objects.equals(lhs.getValue(), rhs.getValue()));   // Are their values equal to one another?
-
+            }
+            case "!=": {
+                Environment.PlcObject lhs = visit(ast.getLeft());
+                Environment.PlcObject rhs = visit(ast.getRight());
+                return Environment.create(!Objects.equals(lhs.getValue(), rhs.getValue()));   // Are their values not equal to one another?
             }
             case "+": {
                 Environment.PlcObject lhs = visit(ast.getLeft());
@@ -312,6 +308,9 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
             case "/": {
                 Environment.PlcObject lhs = visit(ast.getLeft());
                 Environment.PlcObject rhs = visit(ast.getRight());
+                if (rhs.getValue().equals(BigDecimal.valueOf(0)) || rhs.getValue().equals(BigInteger.valueOf(0))) {
+                    throw new RuntimeException("Cannot divide by 0.");
+                }
                 if (lhs.getValue() instanceof BigDecimal) {
                     requireType(BigDecimal.class, rhs);
                     return Environment.create(((BigDecimal) lhs.getValue()).divide((BigDecimal) rhs.getValue(), RoundingMode.HALF_EVEN));
@@ -329,7 +328,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
                 Environment.PlcObject rhs = visit(ast.getRight());
                 requireType(BigInteger.class, rhs);
                 if (lhs.getValue() instanceof BigDecimal) {
-                    return Environment.create(((BigDecimal) lhs.getValue()).pow(((BigInteger) rhs.getValue()).intValue()));
+                    return Environment.create(((BigDecimal) lhs.getValue()).pow(((BigInteger) rhs.getValue()).intValue(), MathContext.DECIMAL64));
                 }
                 else if (lhs.getValue() instanceof BigInteger) {
                     return Environment.create(((BigInteger) lhs.getValue()).pow(((BigInteger) rhs.getValue()).intValue()));

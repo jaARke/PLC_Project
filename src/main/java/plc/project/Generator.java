@@ -106,16 +106,21 @@ public final class Generator implements Ast.Visitor<Void> {
         }
         // Print the closing parenthesis for the parameter list and the opening brace for the function itself
         print(") {");
-        // Visit each of the function's statements using more indentation
-        indent++;
-        for (int i = 0; i < ast.getStatements().size(); i++) {
-            newline(indent);
-            visit(ast.getStatements().get(i));
+        if (ast.getStatements().size() == 0) {  // Print the closing brace on the same line for an empty function
+            print("}");
         }
-        // Print a new, less indented line to place the closing brace
-        indent--;
-        newline(indent);
-        print("}");
+        else {
+            // Visit each of the function's statements using more indentation
+            indent++;
+            for (int i = 0; i < ast.getStatements().size(); i++) {
+                newline(indent);
+                visit(ast.getStatements().get(i));
+            }
+            // Print a new, less indented line to place the closing brace
+            indent--;
+            newline(indent);
+            print("}");
+        }
 
         return null;
     }

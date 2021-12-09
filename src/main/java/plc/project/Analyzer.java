@@ -73,6 +73,9 @@ public final class Analyzer implements Ast.Visitor<Void> {
         ast.setFunction(scope.lookupFunction(ast.getName(), ast.getParameters().size()));
         // Define a new scope, store the function's return type in a variable (to be used by visit(Ast.Statement.Return)), then visit each statement in the function:
         scope = new Scope(scope);
+        for (int i = 0; i < ast.getParameters().size(); i++) {
+            scope.defineVariable(ast.getParameters().get(i), ast.getParameters().get(i), Environment.getType(ast.getParameterTypeNames().get(i)), true, Environment.NIL);
+        }
         funcRet = Environment.getType(ast.getReturnTypeName().orElse("Nil"));
         ast.getStatements().forEach(this::visit);
         // Restore funcRet to null and scope to parent:
@@ -342,7 +345,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
         // Check the exception condition:
         if (ast.getOffset().isPresent()) {
             visit(ast.getOffset().get());
-            if (ast.getOffset().get().getType().equals(Environment.Type.INTEGER)) {
+            if (!ast.getOffset().get().getType().equals(Environment.Type.INTEGER)) {
                 throw new RuntimeException("Offset must be an integer value.");
             }
         }
